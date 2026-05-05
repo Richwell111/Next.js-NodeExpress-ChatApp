@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import Navbar from "@/components/layout/navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,14 +31,16 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body > <div className="flex min-h-screen flex-col bg-background text-foreground">
-              {/* <Navbar /> */}
+      <body >
+         <div className="flex min-h-screen flex-col bg-background text-foreground">
+              <Navbar />
               <main className="flex flex-1 flex-col">
                 <div className="mx-auto flex w-full max-w-6xl  flex-1 flex-col px-4 py-8 md:py-10">
                   {children}
                 </div>
               </main>
             </div>
+            <Toaster />
             </body>
     </html>
     </ClerkProvider>
