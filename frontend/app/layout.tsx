@@ -4,6 +4,7 @@ import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@cl
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import Navbar from "@/components/layout/navbar";
+import { NotificationCountProvider } from "@/hooks/use-notification-count";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,12 +27,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider afterSignOutUrl="/">
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
       <body >
+          <NotificationCountProvider>
          <div className="flex min-h-screen flex-col bg-background text-foreground">
               <Navbar />
               <main className="flex flex-1 flex-col">
@@ -41,6 +43,7 @@ export default function RootLayout({
               </main>
             </div>
             <Toaster />
+            </NotificationCountProvider>
             </body>
     </html>
     </ClerkProvider>
