@@ -1,6 +1,11 @@
 import { query } from "../../db/db.js";
 import { User, UserRow } from "./user.types.js";
 
+/**
+ * Maps a database row (UserRow) to a domain model (User).
+ * This "hydration" step decouples our database schema (snake_case)
+ * from our application logic (camelCase).
+ */
 function hydrateUser(row: UserRow): User {
   return {
     id: row.id,
@@ -14,6 +19,11 @@ function hydrateUser(row: UserRow): User {
   };
 }
 
+/**
+ * Synchronizes a user from Clerk into our local database.
+ * Uses an "UPSERT" pattern (INSERT ... ON CONFLICT) to either create the user
+ * or update their profile if they already exist, ensuring idempotency.
+ */
 export async function upsertUserFromClerkProfile(params: {
   clerkUserId: string;
   displayName: string | null;
@@ -42,6 +52,8 @@ export async function upsertUserFromClerkProfile(params: {
         `,
     [clerkUserId, displayName, avatarUrl]
   );
+
+  // Safety check for strict indexing (noUncheckedIndexedAccess)
   const row = result.rows[0];
   if (!row) {
     throw new Error("Failed to upsert user");
@@ -50,24 +62,24 @@ export async function upsertUserFromClerkProfile(params: {
   return hydrateUser(row);
 }
 
+/**
+ * Updates a user's profile with provided fields.
+ * Builds a dynamic SQL statement so we only update the columns that were actually passed.
+ */
 export async function repoUpdateUserProfile(params: {
   clerkUserId: string;
-  displayName?: string;
-  handle?: string;
-  bio?: string;
-  avatarUrl?: string;
+  displayName?: string | undefined;
+  handle?: string | undefined;
+  bio?: string | undefined;
+  avatarUrl?: string | undefined;
 }): Promise<User> {
   const { clerkUserId, displayName, handle, bio, avatarUrl } = params;
 
-  console.log(clerkUserId, displayName, handle, bio, avatarUrl);
-
   const setClauses: string[] = [];
-  const values: unknown[] = [clerkUserId]; // $1 is always the clerk user id (used in WHERE)
-  let idx = 2; // $2, $3
+  const values: unknown[] = [clerkUserId]; // $1 is reserved for the WHERE clause
+  let idx = 2; // Incremental index for dynamic parameters ($2, $3, etc.)
 
-  // push a column=$index -> string -> push into setClauses
-  // push the actual values into this values array
-
+  // Dynamically push only defined fields into the query
   if (displayName !== undefined) {
     setClauses.push(`display_name = $${idx++}`);
     values.push(displayName);
@@ -88,10 +100,12 @@ export async function repoUpdateUserProfile(params: {
     values.push(avatarUrl);
   }
 
+  // Prevent running an UPDATE with zero changes (SQL syntax error)
   if (setClauses.length === 0) {
     throw new Error("No fields provided for update");
   }
 
+  // Always refresh the updated_at timestamp
   setClauses.push(`updated_at = NOW()`);
 
   const result = await query<UserRow>(
@@ -108,12 +122,11 @@ export async function repoUpdateUserProfile(params: {
         bio,
         created_at,
         updated_at
-
       `,
     values
   );
-  console.log(result);
 
+  // Validate that the user actually existed and was updated
   const row = result.rows[0];
   if (!row) {
     throw new Error(`no user found for clerk user id= ${clerkUserId}`);
