@@ -4,6 +4,11 @@ import axios, {
   type AxiosInstance,
 } from "axios";
 
+/**
+ * Creates a configured Axios instance for the browser.
+ * It automatically handles the base URL and injects the authentication token
+ * into the Authorization header for every request.
+ */
 export function createBrowserApiClient(
   getToken: () => Promise<string | null>
 ): AxiosInstance {
@@ -12,6 +17,10 @@ export function createBrowserApiClient(
     withCredentials: false,
   });
 
+  /**
+   * Request Interceptor: Runs before every request leaves the client.
+   * It fetches the latest auth token and adds it to the headers.
+   */
   client.interceptors.request.use(async (config) => {
     const token = await getToken();
 
@@ -23,9 +32,13 @@ export function createBrowserApiClient(
     return config;
   });
 
+  /**
+   * Response Interceptor: Standardizes how the application handles errors.
+   */
   client.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
+      // Return the error so it can be handled by the calling logic
       return Promise.reject(error);
     }
   );
@@ -33,6 +46,10 @@ export function createBrowserApiClient(
   return client;
 }
 
+/**
+ * Standard GET request wrapper. 
+ * Automatically unwraps the { data: T } structure from the backend.
+ */
 export async function apiGet<T>(
   client: AxiosInstance,
   url: string,
@@ -43,6 +60,10 @@ export async function apiGet<T>(
   return response.data.data;
 }
 
+/**
+ * Standard PATCH request wrapper.
+ * Used for partial updates to resources.
+ */
 export async function apiPatch<TBody, TResponse>(
   client: AxiosInstance,
   url: string,
@@ -54,7 +75,10 @@ export async function apiPatch<TBody, TResponse>(
   return res.data.data;
 }
 
-// apiPost
+/**
+ * Standard POST request wrapper.
+ * Used for creating new resources.
+ */
 export async function apiPost<TBody, TResponse>(
   client: AxiosInstance,
   url: string,
