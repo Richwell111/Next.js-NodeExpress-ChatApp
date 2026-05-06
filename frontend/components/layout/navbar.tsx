@@ -1,10 +1,12 @@
 "use client";
 
-// import { SignedIn, SignedOut, useAuth, UserButton } from "@clerk/nextjs";
-// import Link from "next/link";
-// import { Button } from "../ui/button";
-// import { Bell, Menu, X } from "lucide-react";
-// import { useEffect, useMemo, useState } from "react";
+
+import { Show, SignInButton, SignUpButton,useAuth, UserButton } from '@clerk/nextjs'
+
+import Link from "next/link";
+import { Button } from "../ui/button";
+import { Bell, Menu, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 // import { useSocket } from "@/hooks/use-socket";
 // import { apiGet, createBrowserApiClient } from "@/lib/api-client";
 // import { Notification } from "@/types/notification";
